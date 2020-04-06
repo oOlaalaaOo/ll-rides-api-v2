@@ -1,34 +1,25 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import http from 'http';
-import socketio from 'socket.io';
 import morgan from 'morgan';
-// import bodyParser from 'body-parser';
+import cors from 'cors';
+import socketio from 'socket.io';
+import mongoose from 'mongoose';
+
+const port: number = 5000;
 
 import auth from './routes/auth';
 
+mongoose.connect('mongodb://localhost:27017/ll-rides-db', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
 const app: Express = express();
-const port: number = 5000;
 
 app.use(morgan('dev'));
 app.use(express.urlencoded());
 app.use(express.json());
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Methods', 'PUT, POST, DELETE, GET');
-    return res.status(200).json({});
-  }
-
-  next();
-});
-
-const server: http.Server = http.createServer(app);
-const io: socketio.Server = socketio(server);
+app.use(cors());
 
 const apiVersion = 'api/v1';
 
@@ -46,10 +37,13 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   res.status(error.status || 500);
   res.json({
     error: {
-      message: error.message
-    }
+      message: error.message,
+    },
   });
 });
+
+const server: http.Server = http.createServer(app);
+const io: socketio.Server = socketio(server);
 
 io.on('connection', (socket: any) => {
   console.log('a user connected', socket);
