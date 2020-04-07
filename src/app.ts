@@ -21,7 +21,7 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(cors());
 
-const apiVersion = 'api/v1';
+const apiVersion = '/api';
 
 // Routes
 app.use(`${apiVersion}/auth`, auth);
