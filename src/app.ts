@@ -1,39 +1,43 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
-import http from 'http';
+import express, { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
-import socketio from 'socket.io';
-import mongoose from 'mongoose';
+import compression from 'compression';
+import loggerService from './services/loggerService';
 
-const port: number = 5000;
+import roleRoute from './routes/roleRoute';
+import vendorAuthRoute from './routes/vendor/authRoute';
+import vendorUserImageRoute from './routes/vendor/userImageRoute';
+import vendorUserDetailsRoute from './routes/vendor/userDetailsRoute';
 
-import auth from './routes/auth';
+const app = express();
 
-mongoose.connect('mongodb://localhost:27017/ll-rides-db', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-const app: Express = express();
-
-app.use(morgan('dev'));
 app.use(express.urlencoded());
 app.use(express.json());
+app.use(morgan('dev'));
 app.use(cors());
+app.use(express.static('public'));
+app.use(compression());
 
-const apiVersion = 'api/v1';
+const apiVersion = '/api';
 
 // Routes
-app.use(`${apiVersion}/auth`, auth);
+app.use(`${apiVersion}/role`, roleRoute); // just run once
+
+app.use(`${apiVersion}/vendor/auth`, vendorAuthRoute);
+app.use(`${apiVersion}/vendor/image`, vendorUserImageRoute);
+app.use(`${apiVersion}/vendor/details`, vendorUserDetailsRoute);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   let error: any = new Error('Not Found');
   error.status = 404;
 
+  loggerService.error(JSON.stringify(error));
   next(error);
 });
 
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+  loggerService.error(JSON.stringify(error));
+
   res.status(error.status || 500);
   res.json({
     error: {
@@ -42,15 +46,4 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const server: http.Server = http.createServer(app);
-const io: socketio.Server = socketio(server);
-
-io.on('connection', (socket: any) => {
-  console.log('a user connected', socket);
-});
-
-app.set('io', io);
-
-server.listen(port, () => {
-  console.log(`ll-rides api is listening on port ${port}!`);
-});
+export default app;
