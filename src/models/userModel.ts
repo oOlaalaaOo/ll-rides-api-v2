@@ -22,6 +22,7 @@ const schema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     roleName: { type: String, required: true },
     registeredAt: { type: Date, required: true },
+    verifiedDate: { type: Date },
   },
   {
     minimize: false,

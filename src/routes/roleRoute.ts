@@ -12,7 +12,7 @@ router.post(
       res.status(200).json(resp);
     } catch (err) {
       res.status(500).json({
-        status: 'fail',
+        success: false,
         error: err,
       });
     }

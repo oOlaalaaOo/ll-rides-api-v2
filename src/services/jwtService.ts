@@ -8,7 +8,7 @@ const signPayload = (payload: any) => {
   return jwt.sign(payload, privateKey, {
     algorithm: 'RS256',
     expiresIn: '6h',
-    issuer: 'll-rides'
+    issuer: 'll-rides',
   });
 };
 

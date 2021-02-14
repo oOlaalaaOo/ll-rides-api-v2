@@ -1,38 +1,43 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
-import http from 'http';
+import express, { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
-import socketio from 'socket.io';
-import databaseService from './services/databaseService';
+import compression from 'compression';
+import loggerService from './services/loggerService';
 
-const port: number = 5000;
-
-import authRoute from './routes/authRoute';
 import roleRoute from './routes/roleRoute';
+import vendorAuthRoute from './routes/vendor/authRoute';
+import vendorUserImageRoute from './routes/vendor/userImageRoute';
+import vendorUserDetailsRoute from './routes/vendor/userDetailsRoute';
 
-const app: Express = express();
+const app = express();
 
-app.use(morgan('dev'));
 app.use(express.urlencoded());
 app.use(express.json());
+app.use(morgan('dev'));
 app.use(cors());
-
-databaseService.connect();
+app.use(express.static('public'));
+app.use(compression());
 
 const apiVersion = '/api';
 
 // Routes
-app.use(`${apiVersion}/auth`, authRoute);
 app.use(`${apiVersion}/role`, roleRoute); // just run once
+
+app.use(`${apiVersion}/vendor/auth`, vendorAuthRoute);
+app.use(`${apiVersion}/vendor/image`, vendorUserImageRoute);
+app.use(`${apiVersion}/vendor/details`, vendorUserDetailsRoute);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   let error: any = new Error('Not Found');
   error.status = 404;
 
+  loggerService.error(JSON.stringify(error));
   next(error);
 });
 
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+  loggerService.error(JSON.stringify(error));
+
   res.status(error.status || 500);
   res.json({
     error: {
@@ -41,16 +46,4 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const server: http.Server = http.createServer(app);
-const io: socketio.Server = socketio(server);
-app.set('io', io);
-
-io.on('connection', (socket: socketio.Socket) => {
-  console.log('a user is connected');
-
-  socket.emit('testEvent', { data: 'testData' });
-});
-
-server.listen(port, () => {
-  console.log(`ll-rides api is listening on port ${port}!`);
-});
+export default app;

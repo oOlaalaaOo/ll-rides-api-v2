@@ -8,7 +8,7 @@ export interface IRole extends Document {
 const schema: Schema = new Schema(
   {
     name: { type: String, required: true },
-    description: String,
+    description: { type: String },
   },
   {
     minimize: false,

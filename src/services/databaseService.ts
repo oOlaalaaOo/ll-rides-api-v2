@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
+import config from '../config';
 
 const connect = () => {
-  mongoose.connect('mongodb://localhost:27017/ll-rides-db', {
+  const db_connection = config.dbConnection;
+
+  mongoose.connect(db_connection, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
